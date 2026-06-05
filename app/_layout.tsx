@@ -7,6 +7,22 @@ function AnalyticsTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+     if (typeof window !== 'undefined' && !(window as any).gtag) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-316LCDZKZQ';
+    document.head.appendChild(script);
+
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).gtag = function gtag() {
+      (window as any).dataLayer.push(arguments);
+    };
+
+    (window as any).gtag('js', new Date());
+    (window as any).gtag('config', 'G-316LCDZKZQ');
+  }
+
+  trackPageView(pathname || '/');
     trackPageView(pathname || '/');
   }, [pathname]);
 
