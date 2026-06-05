@@ -11,6 +11,7 @@ import { Waveform } from "@/src/components/Waveform";
 import { SeoHead } from "@/src/components/SeoHead";
 import { api } from "@/src/lib/api";
 import { useI18n } from "@/src/lib/i18n";
+import { trackMetaLead } from "@/src/lib/metaPixel";
 import { colors, gradient, radius } from "@/src/lib/theme";
 
 const LOGO = require("@/assets/images/hearme-logo.jpg");
@@ -55,6 +56,13 @@ export default function Landing() {
         language: lang,
       });
       setPosition(r.position);
+      trackMetaLead({
+  content_name: "waitlist_signup",
+  position: r.position,
+  already: r.already,
+  language: lang,
+  source: "landing",
+});
     } catch (e: any) {
       setErr(e?.message || t("landing.email.error"));
     } finally {
