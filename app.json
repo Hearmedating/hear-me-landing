@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "HEAR ME: Voice First Dating",
+    "slug": "frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "hearme",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "description": "Voice-first dating. Listen first. Judge later. Meet real people through short voice introductions, authentic conversations and meaningful matches.",
+    "primaryColor": "#E03C68",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hearmedating.app",
+      "associatedDomains": [
+        "applinks:hearmedating.com",
+        "applinks:hearmedating.app"
+      ],
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Record your voice introduction and voice replies.",
+        "NSPhotoLibraryUsageDescription": "Add photos to your profile.",
+        "NSCameraUsageDescription": "Take new photos for your profile."
+      }
+    },
+    "android": {
+      "package": "com.hearmedating.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0B0710"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "hearmedating.com" },
+            { "scheme": "https", "host": "hearmedating.app" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0710"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Record your voice introduction."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Add photos to your profile."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
