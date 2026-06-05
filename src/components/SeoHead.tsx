@@ -14,8 +14,8 @@ import { Platform } from "react-native";
 type SeoProps = {
   title: string;
   description: string;
-  url: string;
-  image: string;
+  url?: string;
+  image?: string;
   siteName?: string;
   locale?: "en_US" | "fr_FR" | "es_ES";
   twitterHandle?: string;
@@ -47,8 +47,8 @@ function setLink(rel: string, href: string, sizes?: string) {
 export function SeoHead({
   title,
   description,
-  url,
-  image,
+  url = "https://hearmedating.com/",
+  image = "https://hearmedating.com/assets/assets/images/og-share.jpg",
   siteName = "HEAR ME",
   locale = "en_US",
   twitterHandle,
