@@ -17,7 +17,19 @@ export default function Root({ children }: PropsWithChildren) {
           If you want to enable scrolling, remove `ScrollViewStyleReset` and
           set `overflow: auto` on the body style below.
         */}
-        <ScrollViewStyleReset />
+       <script async src="https://www.googletagmanager.com/gtag/js?id=G-316LCDZKZQ" />
+<script
+  dangerouslySetInnerHTML={{
+    __html: `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-316LCDZKZQ', { send_page_view: false });
+    `,
+  }}
+/>
+
+<ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{
             __html: `
