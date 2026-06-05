@@ -25,6 +25,9 @@ export default function Landing() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 900;
+  const isMobile = !isDesktop;
+  const isNarrowMobile = width <= 360;
+  const sampleWaveformBars = isDesktop ? 22 : width <= 340 ? 9 : width <= 390 ? 11 : 13;
 
   const [foundingRemaining, setFoundingRemaining] = useState<number | null>(null);
   const [email, setEmail] = useState("");
@@ -62,6 +65,12 @@ export default function Landing() {
     }
   };
 
+  const scrollToWaitlist = useCallback(() => {
+    if (Platform.OS === "web" && typeof document !== "undefined") {
+      document.getElementById("waitlist")?.scrollIntoView?.({ behavior: "smooth" });
+    }
+  }, []);
+
   const playSample = useCallback(async () => {
     // Audio playback is intentionally disabled (sample voice removed).
     // Keep the visual feedback so the player chrome still feels alive —
@@ -88,7 +97,7 @@ export default function Landing() {
         locale={lang === "fr" ? "fr_FR" : lang === "es" ? "es_ES" : "en_US"}
       />
       {/* ============ NAV ============ */}
-      <View style={[styles.nav, isDesktop && styles.navDesktop]}>
+      <View style={[styles.nav, isDesktop && styles.navDesktop, isNarrowMobile && styles.navNarrow]}>
         <View style={styles.brandRow}>
           <Image source={LOGO} style={styles.logoSm} />
           <Text style={styles.brandWord}>HEAR ME</Text>
@@ -111,33 +120,44 @@ export default function Landing() {
       <View style={[styles.hero, isDesktop && styles.heroDesktop]}>
         <View style={{ flex: 1, alignItems: isDesktop ? "flex-start" : "center" }}>
           <Image source={LOGO} style={styles.logoLg} />
-          <Text style={styles.eyebrow}>HEAR ME · VOICE FIRST DATING · 18+</Text>
-          <Text style={[styles.heroTitle, !isDesktop && { textAlign: "center" }]}>
+          <Text style={[styles.eyebrow, isMobile && styles.eyebrowMobile]}>HEAR ME · VOICE FIRST DATING · 18+</Text>
+          <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile, isNarrowMobile && styles.heroTitleNarrow, !isDesktop && { textAlign: "center" }]}>
             {t("landing.hero.title")}
           </Text>
-          <Text style={[styles.heroSub, !isDesktop && { textAlign: "center" }]}>
+          <Text style={[styles.heroSub, isMobile && styles.heroSubMobile, !isDesktop && { textAlign: "center" }]}>
             {t("landing.hero.sub")}
           </Text>
 
           {/* Sample voice */}
           <Pressable
             onPress={playSample}
-            style={styles.samplePill}
+            style={[styles.samplePill, isMobile && styles.samplePillMobile]}
             testID="landing-play-sample"
           >
             <View style={styles.sampleIcon}>
               <Ionicons name={playing ? "pause" : "play"} size={16} color={colors.text} />
             </View>
-            <Text style={styles.sampleText}>{playing ? t("landing.sample.playing") : t("landing.sample.cta")}</Text>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Waveform active={playing} bars={22} />
+            <View style={[styles.sampleBody, isMobile && styles.sampleBodyMobile]}>
+              <Text style={[styles.sampleText, isMobile && styles.sampleTextMobile]}>
+                {playing ? t("landing.sample.playing") : t("landing.sample.cta")}
+              </Text>
+              <View style={[styles.sampleWaveform, isMobile && styles.sampleWaveformMobile]}>
+                <Waveform
+                  active={playing}
+                  bars={sampleWaveformBars}
+                  height={isMobile ? 34 : 70}
+                  barWidth={isMobile ? 3 : 4}
+                  gap={isMobile ? 3 : 4}
+                  maxBarHeight={isMobile ? 26 : 56}
+                />
+              </View>
             </View>
           </Pressable>
 
           {/* CTAs */}
           <View style={[styles.ctaRow, !isDesktop && { flexDirection: "column", alignSelf: "stretch" }]}>
             <Pressable
-              onPress={() => router.push("/")}
+              onPress={scrollToWaitlist}
               style={[styles.ctaPrimary, !isDesktop && { width: "100%" }]}
               testID="landing-cta-founding"
             >
@@ -150,7 +170,7 @@ export default function Landing() {
               <Text style={styles.ctaPrimaryText}>{t("landing.cta.founding")}</Text>
             </Pressable>
             <Pressable
-              onPress={() => { document?.getElementById?.("waitlist")?.scrollIntoView?.({ behavior: "smooth" }); }}
+              onPress={scrollToWaitlist}
               style={[styles.ctaSecondary, !isDesktop && { width: "100%", marginTop: 12 }]}
               testID="landing-cta-notify"
             >
@@ -160,9 +180,9 @@ export default function Landing() {
 
           {/* Founding live counter */}
           {foundingRemaining !== null ? (
-            <View style={styles.foundingTicker} testID="landing-founding-ticker">
+            <View style={[styles.foundingTicker, isMobile && styles.foundingTickerMobile]} testID="landing-founding-ticker">
               <View style={styles.foundingDot} />
-              <Text style={styles.foundingText}>
+              <Text style={[styles.foundingText, isMobile && styles.foundingTextMobile]}>
                 {t("landing.founding.ticker", { remaining: foundingRemaining })}
               </Text>
             </View>
@@ -187,9 +207,9 @@ export default function Landing() {
       </View>
 
       {/* ============ HOW IT WORKS ============ */}
-      <View style={styles.section}>
+      <View style={[styles.section, isMobile && styles.sectionMobile]}>
         <Text style={styles.sectionEyebrow}>{t("landing.how.eyebrow")}</Text>
-        <Text style={styles.sectionTitle}>{t("landing.how.title")}</Text>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>{t("landing.how.title")}</Text>
         <View style={[styles.steps, isDesktop && { flexDirection: "row" }]}>
           {[
             { icon: "🎙️", titleKey: "landing.step1.title", subKey: "landing.step1.sub" },
@@ -206,22 +226,22 @@ export default function Landing() {
       </View>
 
       {/* ============ DIFFERENT ============ */}
-      <View style={[styles.section, styles.sectionDark]}>
+      <View style={[styles.section, styles.sectionDark, isMobile && styles.sectionMobile]}>
         <Text style={styles.sectionEyebrow}>{t("landing.diff.eyebrow")}</Text>
-        <Text style={[styles.sectionTitle, { textAlign: "center" }]}>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile, { textAlign: "center" }]}>
           {t("landing.diff.title")}
         </Text>
-        <Text style={styles.diffOther}>{t("landing.diff.other")}</Text>
-        <Text style={styles.diffUs}>{t("landing.diff.us")}</Text>
-        <View style={{ marginTop: 24, alignSelf: "center", width: 160 }}>
-          <Waveform active bars={26} />
+        <Text style={[styles.diffOther, isMobile && styles.diffOtherMobile]}>{t("landing.diff.other")}</Text>
+        <Text style={[styles.diffUs, isMobile && styles.diffUsMobile]}>{t("landing.diff.us")}</Text>
+        <View style={[styles.diffWaveform, isMobile && styles.diffWaveformMobile]}>
+          <Waveform active bars={isMobile ? 18 : 26} height={isMobile ? 52 : 70} maxBarHeight={isMobile ? 38 : 56} />
         </View>
       </View>
 
       {/* ============ FOUNDING 100 ============ */}
-      <View style={styles.section}>
+      <View style={[styles.section, isMobile && styles.sectionMobile]}>
         <Text style={styles.sectionEyebrow}>{t("landing.founding.eyebrow")}</Text>
-        <Text style={styles.sectionTitle}>{t("landing.founding.headline")}</Text>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>{t("landing.founding.headline")}</Text>
         <View style={[styles.foundingCard, isDesktop && { maxWidth: 720, alignSelf: "center" }]}>
           <LinearGradient
             colors={["rgba(212,175,55,0.10)", "rgba(212,175,55,0.04)"]}
@@ -243,18 +263,18 @@ export default function Landing() {
       </View>
 
       {/* ============ COMING SOON ============ */}
-      <View style={styles.section}>
+      <View style={[styles.section, isMobile && styles.sectionMobile]}>
         <Text style={styles.sectionEyebrow}>{t("landing.stores.eyebrow")}</Text>
-        <Text style={styles.sectionTitle}>{t("landing.stores.title")}</Text>
-        <View style={[styles.storesRow, isDesktop && { justifyContent: "center" }]}>
-          <View style={styles.storeBadge}>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>{t("landing.stores.title")}</Text>
+        <View style={[styles.storesRow, isDesktop && { justifyContent: "center" }, isMobile && styles.storesRowMobile]}>
+          <View style={[styles.storeBadge, isMobile && styles.storeBadgeMobile]}>
             <Ionicons name="logo-apple" size={28} color={colors.text} />
             <View>
               <Text style={styles.storeSmall}>{t("landing.stores.appleSmall")}</Text>
               <Text style={styles.storeLarge}>App Store</Text>
             </View>
           </View>
-          <View style={styles.storeBadge}>
+          <View style={[styles.storeBadge, isMobile && styles.storeBadgeMobile]}>
             <Ionicons name="logo-google-playstore" size={28} color={colors.text} />
             <View>
               <Text style={styles.storeSmall}>{t("landing.stores.googleSmall")}</Text>
@@ -265,10 +285,10 @@ export default function Landing() {
       </View>
 
       {/* ============ WAITLIST ============ */}
-      <View nativeID="waitlist" style={[styles.section, styles.sectionDark, { paddingBottom: 56 }]}>
+      <View nativeID="waitlist" style={[styles.section, styles.sectionDark, isMobile && styles.sectionMobile, { paddingBottom: 56 }]}>
         <Text style={styles.sectionEyebrow}>{t("landing.email.eyebrow")}</Text>
-        <Text style={[styles.sectionTitle, { textAlign: "center" }]}>{t("landing.email.title")}</Text>
-        <Text style={[styles.heroSub, { textAlign: "center", maxWidth: 520, alignSelf: "center", marginBottom: 24 }]}>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile, { textAlign: "center" }]}>{t("landing.email.title")}</Text>
+        <Text style={[styles.heroSub, isMobile && styles.heroSubMobile, { textAlign: "center", maxWidth: 520, alignSelf: "center", marginBottom: 24 }]}>
           {t("landing.email.sub")}
         </Text>
 
@@ -281,7 +301,7 @@ export default function Landing() {
             </Text>
           </View>
         ) : (
-          <View style={[styles.formRow, isDesktop && { maxWidth: 520, alignSelf: "center" }]}>
+          <View style={[styles.formRow, isDesktop && { maxWidth: 520, alignSelf: "center" }, isMobile && styles.formRowMobile]}>
             <TextInput
               value={email}
               onChangeText={setEmail}
@@ -289,13 +309,13 @@ export default function Landing() {
               keyboardType="email-address"
               placeholder={t("landing.email.placeholder")}
               placeholderTextColor={colors.textMuted}
-              style={styles.input}
+              style={[styles.input, isMobile && styles.inputMobile]}
               testID="waitlist-email-input"
             />
             <Pressable
               onPress={submitEmail}
               disabled={submitting}
-              style={[styles.submit, submitting && { opacity: 0.6 }]}
+              style={[styles.submit, isMobile && styles.submitMobile, submitting && { opacity: 0.6 }]}
               testID="waitlist-submit"
             >
               <LinearGradient
@@ -345,6 +365,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 20, paddingBottom: 16,
   },
   navDesktop: { paddingHorizontal: 56, paddingTop: 28 },
+  navNarrow: { paddingHorizontal: 16 },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   logoSm: { width: 36, height: 36, borderRadius: 18 },
   logoLg: { width: 96, height: 96, borderRadius: 48, marginBottom: 20 },
@@ -358,19 +379,29 @@ const styles = StyleSheet.create({
   hero: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 56, alignItems: "center" },
   heroDesktop: { flexDirection: "row", paddingHorizontal: 56, paddingTop: 40, gap: 48, alignItems: "center", maxWidth: 1240, alignSelf: "center", width: "100%" },
   eyebrow: { color: colors.textMuted, fontSize: 11, fontWeight: "700", letterSpacing: 2.5, marginBottom: 16 },
+  eyebrowMobile: { textAlign: "center", fontSize: 10, letterSpacing: 1.5, lineHeight: 16, maxWidth: "100%" },
   heroTitle: { color: colors.text, fontSize: 48, fontWeight: "800", lineHeight: 56, marginBottom: 16, letterSpacing: -1 },
+  heroTitleMobile: { fontSize: 40, lineHeight: 46, maxWidth: "100%" },
+  heroTitleNarrow: { fontSize: 36, lineHeight: 42 },
   heroSub: { color: colors.textSecondary, fontSize: 18, lineHeight: 26, marginBottom: 28, maxWidth: 520 },
+  heroSubMobile: { fontSize: 16, lineHeight: 24, marginBottom: 24, maxWidth: "100%" },
 
   samplePill: {
     flexDirection: "row", alignItems: "center", gap: 12,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: radius.lg, padding: 12,
     borderWidth: 1, borderColor: colors.border, marginBottom: 28, width: "100%", maxWidth: 420,
   },
+  samplePillMobile: { alignItems: "center", maxWidth: 430 },
   sampleIcon: {
     width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center",
     backgroundColor: colors.primary,
   },
-  sampleText: { color: colors.text, fontSize: 13, fontWeight: "600" },
+  sampleBody: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center" },
+  sampleBodyMobile: { flexDirection: "column", alignItems: "flex-start", gap: 2 },
+  sampleText: { color: colors.text, fontSize: 13, fontWeight: "600", flexShrink: 0, zIndex: 2 },
+  sampleTextMobile: { fontSize: 14, lineHeight: 19, flexShrink: 1, maxWidth: "100%" },
+  sampleWaveform: { flex: 1, marginLeft: 12, minWidth: 0 },
+  sampleWaveformMobile: { width: "100%", maxWidth: 96, marginLeft: 0, flex: 0, opacity: 0.95 },
 
   ctaRow: { flexDirection: "row", gap: 12, alignItems: "center" },
   ctaPrimary: {
@@ -390,7 +421,9 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
   },
   foundingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.gold },
+  foundingTickerMobile: { alignSelf: "stretch", borderRadius: radius.md, paddingHorizontal: 12 },
   foundingText: { color: colors.gold, fontSize: 13, fontWeight: "600" },
+  foundingTextMobile: { flex: 1, lineHeight: 18 },
 
   phoneMock: {
     width: 360, height: 540, borderRadius: 36, overflow: "hidden",
@@ -398,9 +431,11 @@ const styles = StyleSheet.create({
   },
 
   section: { paddingHorizontal: 24, paddingVertical: 56, maxWidth: 1100, alignSelf: "center", width: "100%" },
+  sectionMobile: { paddingHorizontal: 20, paddingVertical: 48 },
   sectionDark: { backgroundColor: "rgba(255,255,255,0.02)", maxWidth: "100%" as any, paddingHorizontal: 24 },
   sectionEyebrow: { color: colors.textMuted, fontSize: 11, fontWeight: "700", letterSpacing: 2, textAlign: "center", marginBottom: 12 },
   sectionTitle: { color: colors.text, fontSize: 32, fontWeight: "700", textAlign: "center", marginBottom: 36, letterSpacing: -0.5 },
+  sectionTitleMobile: { fontSize: 28, lineHeight: 34, marginBottom: 28 },
 
   steps: { gap: 16 },
   stepCard: {
@@ -412,7 +447,11 @@ const styles = StyleSheet.create({
   stepSub: { color: colors.textSecondary, fontSize: 14, lineHeight: 22 },
 
   diffOther: { color: colors.textMuted, fontSize: 18, textAlign: "center", marginBottom: 8 },
+  diffOtherMobile: { fontSize: 16, lineHeight: 22 },
   diffUs: { color: colors.text, fontSize: 24, fontWeight: "700", textAlign: "center" },
+  diffUsMobile: { fontSize: 21, lineHeight: 28 },
+  diffWaveform: { marginTop: 24, alignSelf: "center", width: 220 },
+  diffWaveformMobile: { width: 140 },
 
   foundingCard: { borderRadius: radius.lg, padding: 24, borderWidth: 1, borderColor: "rgba(212,175,55,0.25)", overflow: "hidden" },
   benefitRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
@@ -420,22 +459,27 @@ const styles = StyleSheet.create({
   benefitText: { color: colors.text, fontSize: 15, flex: 1, fontWeight: "500" },
 
   storesRow: { flexDirection: "row", gap: 16, flexWrap: "wrap" },
+  storesRowMobile: { flexDirection: "column", alignItems: "stretch", gap: 12 },
   storeBadge: {
     flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 12,
     borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, minWidth: 180,
   },
+  storeBadgeMobile: { width: "100%", minWidth: 0, justifyContent: "center" },
   storeSmall: { color: colors.textMuted, fontSize: 10, fontWeight: "600" },
   storeLarge: { color: colors.text, fontSize: 16, fontWeight: "700" },
 
   formRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  formRowMobile: { flexDirection: "column", flexWrap: "nowrap", gap: 12 },
   input: {
     flex: 1, minWidth: 220, backgroundColor: colors.surface, color: colors.text, fontSize: 15,
     paddingHorizontal: 16, paddingVertical: 14, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border,
   },
+  inputMobile: { width: "100%", minWidth: 0, flexGrow: 0, flexShrink: 0 },
   submit: {
     paddingHorizontal: 24, paddingVertical: 14, borderRadius: radius.md,
     alignItems: "center", justifyContent: "center", overflow: "hidden",
   },
+  submitMobile: { width: "100%" },
   submitText: { color: colors.text, fontSize: 15, fontWeight: "700" },
   errText: { color: colors.danger, marginTop: 12, textAlign: "center" },
 
@@ -449,5 +493,5 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 40, alignItems: "center", gap: 8 },
   footerBrand: { color: colors.text, fontSize: 14, fontWeight: "700", letterSpacing: 1.5 },
   footerSlogan: { color: colors.textSecondary, fontSize: 13, fontStyle: "italic" },
-  footerLegal: { color: colors.textMuted, fontSize: 11, marginTop: 8 },
+  footerLegal: { color: colors.textMuted, fontSize: 11, marginTop: 8, textAlign: "center" },
 });

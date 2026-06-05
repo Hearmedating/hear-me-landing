@@ -21,6 +21,11 @@ Source project: `/app/frontend` (Expo SDK 54, expo-router 3, React Native Web).
 │   ├── data-deletion.tsx      ← Public data-deletion instructions (Play / Apple compliance)
 │   └── admin/
 │       └── waitlist.tsx       ← Token-protected admin dashboard
+├── api/                      ← Vercel serverless waitlist API routes
+│   ├── waitlist.js            ← POST /api/waitlist
+│   ├── waitlist/count.js      ← GET /api/waitlist/count
+│   ├── founding/stats.js      ← GET /api/founding/stats
+│   └── admin/                 ← Admin list, CSV export, broadcast endpoints
 ├── src/
 │   ├── components/
 │   │   ├── SeoHead.tsx        ← <head> meta + og + twitter cards
@@ -114,15 +119,35 @@ Make sure your target project's `tsconfig.json` includes:
 
 The included `tsconfig.json` is already set up.
 
-### 4 · Backend endpoint
-The landing form posts to `POST /api/waitlist` and the count widget reads
-`GET /api/waitlist/count`.
+### 4 · Waitlist API for Vercel
+The landing form posts to `POST /api/waitlist`, the count widget reads
+`GET /api/waitlist/count`, the Founding 100 ticker reads
+`GET /api/founding/stats`, and the admin dashboard uses these routes:
 
-You have two options:
-- **A.** Point `EXPO_PUBLIC_BACKEND_URL` (in your project's `.env`) at the
-  existing HEAR ME FastAPI backend. The landing will work immediately.
-- **B.** Stub these two endpoints locally if you want to host a static-only
-  version. The form will appear functional but won't persist signups.
+- `GET /api/admin/waitlist`
+- `GET /api/admin/waitlist.csv`
+- `POST /api/admin/waitlist/broadcast`
+
+These routes are now included as Vercel Serverless Functions under `api/`. They
+persist signups in Vercel KV / Upstash Redis via its REST API, so the deployed
+site no longer needs the Emergent preview proxy to reach the original FastAPI
+backend.
+
+Configure these environment variables in Vercel before deploying:
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `KV_REST_API_URL` | Yes | Vercel KV REST URL. `UPSTASH_REDIS_REST_URL` also works. |
+| `KV_REST_API_TOKEN` | Yes | Vercel KV REST token. `UPSTASH_REDIS_REST_TOKEN` also works. |
+| `ADMIN_TOKEN` | Yes for `/admin/waitlist` | Token checked against the `X-Admin-Token` header and CSV `token` query param. |
+| `FOUNDING_MEMBER_CAP` | No | Founding-member cap; defaults to `100`. |
+| `RESEND_API_KEY` | Only for real broadcasts | Enables admin broadcast email sends. Dry runs that do not send email work without it. |
+| `WAITLIST_FROM_EMAIL` | No | Sender for Resend broadcasts; defaults to `HEAR ME <no-reply@hearmedating.com>`. |
+| `EXPO_PUBLIC_BACKEND_URL` | No for Vercel Functions | Leave empty for same-origin `/api`. Set only if intentionally proxying to a separate backend. |
+
+If the storage variables are missing, the API returns a clear JSON `503` error
+instead of allowing the frontend to parse Vercel's `index.html` fallback as if it
+were an API response.
 
 ### 5 · Web-bundle the landing
 From the project root:
@@ -153,7 +178,7 @@ hard-coded text inside the page files.
 - The landing's "Hear a sample voice" button is intentionally a visual placeholder
   (no MP3 ships in this export).
 - The admin screen lives at `/admin/waitlist?token=<ADMIN_TOKEN>` and is gated
-  by an `X-Admin-Token` header — the backend `.env` value for `ADMIN_TOKEN`
+  by an `X-Admin-Token` header — the Vercel `ADMIN_TOKEN` environment variable
   must match.
 - The `+html.tsx` file is the canonical place to add Google Analytics, Plausible,
   or other site-wide scripts.

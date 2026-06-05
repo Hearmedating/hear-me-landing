@@ -13,7 +13,19 @@ import { colors, gradient } from "@/src/lib/theme";
 
 const BAR_PATTERN = [0.35, 0.65, 0.45, 0.85, 0.3, 0.7, 0.5, 0.9, 0.4, 0.6, 0.55, 0.8, 0.35, 0.7, 0.45];
 
-function Bar({ peak, active, delay }: { peak: number; active: boolean; delay: number }) {
+function Bar({
+  peak,
+  active,
+  delay,
+  width,
+  maxBarHeight,
+}: {
+  peak: number;
+  active: boolean;
+  delay: number;
+  width: number;
+  maxBarHeight: number;
+}) {
   const progress = useSharedValue(active ? 1 : 0.3);
 
   useEffect(() => {
@@ -32,11 +44,11 @@ function Bar({ peak, active, delay }: { peak: number; active: boolean; delay: nu
   }, [active, delay, progress]);
 
   const style = useAnimatedStyle(() => ({
-    height: 6 + progress.value * peak * 56,
+    height: 6 + progress.value * peak * maxBarHeight,
   }));
 
   return (
-    <Animated.View style={[styles.barWrap, style]}>
+    <Animated.View style={[styles.barWrap, { width }, style]}>
       {active ? (
         <LinearGradient
           colors={[gradient.primary[0], gradient.primary[1]]}
@@ -51,12 +63,33 @@ function Bar({ peak, active, delay }: { peak: number; active: boolean; delay: nu
   );
 }
 
-export function Waveform({ active, bars = 32 }: { active: boolean; bars?: number }) {
+export function Waveform({
+  active,
+  bars = 32,
+  height = 70,
+  barWidth = 4,
+  gap = 4,
+  maxBarHeight = 56,
+}: {
+  active: boolean;
+  bars?: number;
+  height?: number;
+  barWidth?: number;
+  gap?: number;
+  maxBarHeight?: number;
+}) {
   const seq = Array.from({ length: bars }, (_, i) => BAR_PATTERN[i % BAR_PATTERN.length]);
   return (
-    <View style={styles.row} testID="voice-waveform">
+    <View style={[styles.row, { gap, height }]} testID="voice-waveform">
       {seq.map((peak, i) => (
-        <Bar key={i} peak={peak} active={active} delay={(i * 53) % 600} />
+        <Bar
+          key={i}
+          peak={peak}
+          active={active}
+          delay={(i * 53) % 600}
+          width={barWidth}
+          maxBarHeight={maxBarHeight}
+        />
       ))}
     </View>
   );
@@ -67,11 +100,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    height: 70,
   },
   barWrap: {
-    width: 4,
     borderRadius: 4,
     overflow: "hidden",
   },
