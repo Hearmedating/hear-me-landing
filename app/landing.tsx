@@ -62,6 +62,12 @@ export default function Landing() {
     }
   };
 
+  const scrollToWaitlist = useCallback(() => {
+    if (Platform.OS === "web" && typeof document !== "undefined") {
+      document.getElementById("waitlist")?.scrollIntoView?.({ behavior: "smooth" });
+    }
+  }, []);
+
   const playSample = useCallback(async () => {
     // Audio playback is intentionally disabled (sample voice removed).
     // Keep the visual feedback so the player chrome still feels alive —
@@ -137,7 +143,7 @@ export default function Landing() {
           {/* CTAs */}
           <View style={[styles.ctaRow, !isDesktop && { flexDirection: "column", alignSelf: "stretch" }]}>
             <Pressable
-              onPress={() => router.push("/")}
+              onPress={scrollToWaitlist}
               style={[styles.ctaPrimary, !isDesktop && { width: "100%" }]}
               testID="landing-cta-founding"
             >
@@ -150,7 +156,7 @@ export default function Landing() {
               <Text style={styles.ctaPrimaryText}>{t("landing.cta.founding")}</Text>
             </Pressable>
             <Pressable
-              onPress={() => { document?.getElementById?.("waitlist")?.scrollIntoView?.({ behavior: "smooth" }); }}
+              onPress={scrollToWaitlist}
               style={[styles.ctaSecondary, !isDesktop && { width: "100%", marginTop: 12 }]}
               testID="landing-cta-notify"
             >

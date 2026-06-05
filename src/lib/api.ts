@@ -22,21 +22,29 @@ async function request<T>(method: string, path: string, body?: Json): Promise<T>
   const res = await fetch(`${BASE}/api${path}`, {
     method,
     headers: {
+      Accept: "application/json",
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  const contentType = res.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const payload = isJson ? await res.json().catch(() => null) : null;
+
   if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const j = await res.json();
-      if (j?.detail) detail = String(j.detail);
-    } catch {}
+    const detail = payload?.detail ? String(payload.detail) : `HTTP ${res.status}`;
     throw new Error(detail);
   }
+
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+
+  if (!isJson) {
+    throw new Error("API route returned a non-JSON response. Check that the Vercel /api route is deployed and not rewritten to index.html.");
+  }
+
+  return payload as T;
 }
 
 export const api = {

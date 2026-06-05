@@ -65,6 +65,24 @@ If you take the Expo web build and host it externally (we can do this with one `
 
 I will tell you the exact hostname once you choose a target.
 
+For Vercel, the landing page is not static-only anymore: the repo includes
+Serverless Functions under `api/` for `POST /api/waitlist`,
+`GET /api/waitlist/count`, `GET /api/founding/stats`, and the admin waitlist
+routes. Add these Vercel environment variables before deploying:
+
+```env
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
+ADMIN_TOKEN=...
+FOUNDING_MEMBER_CAP=100
+RESEND_API_KEY=...          # only needed for real waitlist broadcasts
+WAITLIST_FROM_EMAIL=HEAR ME <no-reply@hearmedating.com>
+```
+
+Leave `EXPO_PUBLIC_BACKEND_URL` empty when using these same-origin Vercel
+Functions. If it is set to an Emergent preview backend at build time, the web
+bundle will keep posting there instead of to `/api` on Vercel.
+
 ---
 
 ## 4 · Verification checklist (after DNS propagation)
@@ -140,16 +158,17 @@ After you save all 4 records:
 - Hit **Verify** in the Resend dashboard. All 4 indicators should turn green ✓.
 - You're cleared to send from `no-reply@hearmedating.com`.
 
-### Backend `.env` changes (once domain is verified)
+### Vercel / backend email environment (once domain is verified)
 
 ```env
-EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxx
-ADMIN_NOTIFY_EMAIL=hello@hearmedating.com
-ADMIN_TOKEN=hBvdXE8X00MX8sr_zCEDCCR59Cn-pgxVJ8yRShB1BnA  # already set
+WAITLIST_FROM_EMAIL=HEAR ME <no-reply@hearmedating.com>
+ADMIN_TOKEN=...
 ```
 
-Restart backend → emails flip from mock-stdout to real Resend delivery instantly. No code change required.
+On Vercel, `RESEND_API_KEY` enables real sends from the admin broadcast route.
+If you are running the original FastAPI backend separately, keep its
+`EMAIL_PROVIDER=resend` / `ADMIN_NOTIFY_EMAIL` settings there too.
 
 ### Admin dashboard
 
