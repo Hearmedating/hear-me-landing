@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text,
+  Image, Platform, Pressable, ScrollView, StyleSheet, Text,
   TextInput, View, useWindowDimensions, ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,6 +11,7 @@ import { Waveform } from "@/src/components/Waveform";
 import { SeoHead } from "@/src/components/SeoHead";
 import { api } from "@/src/lib/api";
 import { useI18n } from "@/src/lib/i18n";
+import { trackEvent } from "@/src/lib/analytics";
 import { trackMetaLead } from "@/src/lib/metaPixel";
 import { colors, gradient, radius } from "@/src/lib/theme";
 
@@ -20,6 +21,13 @@ const LOGO = require("@/assets/images/hearme-logo.jpg");
 // its design (player chrome + animated waveform) but plays nothing. We will
 // plug a real recording back in here when the user is happy with the voice.
 const SAMPLE_AUDIO_DISABLED = true;
+const WAITLIST_SOURCE = "landing";
+
+function getEmailDomain(value: string) {
+  const [, domain] = value.trim().toLowerCase().split("@");
+
+  return domain || undefined;
+}
 
 export default function Landing() {
   const { t, lang, setLang } = useI18n();
@@ -34,6 +42,8 @@ export default function Landing() {
   const [err, setErr] = useState<string | null>(null);
 
   const [playing, setPlaying] = useState(false);
+  const signupInFlightRef = useRef(false);
+  const waitlistSignupTrackedRef = useRef(false);
 
   // Load founding stats live.
   useEffect(() => {
@@ -43,29 +53,50 @@ export default function Landing() {
   }, []);
 
   const submitEmail = async () => {
-    if (!email.trim() || !email.includes("@")) {
+    if (signupInFlightRef.current) {
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
       setErr(t("landing.email.invalid"));
       return;
     }
+
+    signupInFlightRef.current = true;
     setSubmitting(true);
     setErr(null);
+
     try {
       const r = await api.post<{ position: number; already: boolean }>("/waitlist", {
-        email: email.trim().toLowerCase(),
-        source: "landing",
+        email: normalizedEmail,
+        source: WAITLIST_SOURCE,
         language: lang,
       });
       setPosition(r.position);
-      trackMetaLead({
-  content_name: "waitlist_signup",
-  position: r.position,
-  already: r.already,
-  language: lang,
-  source: "landing",
-});
+
+      if (!r.already && !waitlistSignupTrackedRef.current) {
+        const eventParams = {
+          source: WAITLIST_SOURCE,
+          language: lang,
+          email_domain: getEmailDomain(normalizedEmail),
+          position: r.position,
+          already: r.already,
+        };
+
+        // Waitlist conversion tracking is triggered here only after the API confirms the signup was saved.
+        trackEvent("waitlist_signup", eventParams);
+        trackMetaLead({
+          ...eventParams,
+          content_name: "waitlist_signup",
+        });
+        waitlistSignupTrackedRef.current = true;
+      }
     } catch (e: any) {
       setErr(e?.message || t("landing.email.error"));
     } finally {
+      signupInFlightRef.current = false;
       setSubmitting(false);
     }
   };
